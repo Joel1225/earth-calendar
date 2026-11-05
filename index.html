@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Earth Calendar</title>
+<style>
+body {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+}
+section {
+  border: 1px solid #aaa;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+}
+input, button {
+  padding: 10px;
+  margin: 5px;
+  font-size: 16px;
+}
+.result {
+  font-size: 24px;
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
+
+<h1>Earth Calendar</h1>
+<p>A solstice-based calendar using UTC.</p>
+
+<section>
+<h2>Gregorian → Earth Calendar</h2>
+<input type="date" id="gregorian" value="2026-11-04">
+<button onclick="convertForward()">Convert</button>
+<p id="forwardResult" class="result">11726\318</p>
+</section>
+
+<section>
+<h2>Earth Calendar → Gregorian</h2>
+<label>Earth year:</label>
+<input type="number" id="year" value="11726">
+<br>
+<label>Day of year:</label>
+<input type="number" id="day" value="318">
+<button onclick="convertBackward()">Convert</button>
+<p id="backResult" class="result">2026-11-04</p>
+</section>
+
+<section>
+<h2>Calendar rules</h2>
+<ul>
+<li>Format: YEAR\DDD.</li>
+<li>No months.</li>
+<li>Each year starts at 00:00 UTC on the first midnight following the December solstice.</li>
+<li>Years have either 365 or 366 days.</li>
+<li>Year 0 and negative years are included.</li>
+</ul>
+<p>Calibration:
+2025-12-22 = 11726\001<br>
+2026-11-04 = 11726\318<br>
+2026-12-22 = 11727\001</p>
+</section>
+
+<script>
+const DAY = 86400000;
+const EPOCH = Date.UTC(2025, 11, 22);
+
+function startOfYear(year) {
+  return EPOCH + (year - 11726) * 365.2422 * DAY;
+}
+
+function convertForward() {
+  const date = new Date(
+    document.getElementById("gregorian").value + "T00:00:00Z"
+  );
+
+  let year = 11726;
+  while (startOfYear(year + 1) <= date.getTime()) year++;
+  while (startOfYear(year) > date.getTime()) year--;
+
+  const day = Math.floor(
+    (date.getTime() - startOfYear(year)) / DAY
+  ) + 1;
+
+  document.getElementById("forwardResult").textContent =
+    year + "\\" + String(day).padStart(3, "0");
+}
+
+function convertBackward() {
+  const year = Number(document.getElementById("year").value);
+  const day = Number(document.getElementById("day").value);
+
+  if (!Number.isInteger(year) ||
+      !Number.isInteger(day) ||
+      day < 1 || day > 366) {
+    document.getElementById("backResult").textContent =
+      "Invalid date";
+    return;
+  }
+
+  const date = new Date(
+    startOfYear(year) + (day - 1) * DAY
+  );
+
+  document.getElementById("backResult").textContent =
+    date.toISOString().slice(0, 10);
+}
+</script>
+
+</body>
+</html>
